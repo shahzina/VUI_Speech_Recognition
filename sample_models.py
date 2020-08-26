@@ -98,19 +98,18 @@ def deep_rnn_model(input_dim, units, recur_layers, output_dim=29):
     # Main acoustic input
     input_data = Input(name='the_input', shape=(None, input_dim))
     # TODO: Add recurrent layers, each with batch normalization
-    rnn_1 = GRU(units, activation='relu',
-                return_sequences=True,
-                implementation=2,
-                name='rnn_1')(input_data)
-    bn_rnn_1 = BatchNormalization(name='bn_rnn_1')(rnn_1)
-    
-    rnn_2 = GRU(units, activation = 'relu',
-                return_sequences=True, 
-                implementation=2, 
-                name = 'rnn_2')(bn_rnn_1)
-    bn_rnn_2 = BatchNormalization(name = 'bn_rnn_2')(rnn_2)
+    for i in range(recur_layers):
+        rnn_layer = GRU(units, activation='relu',
+                        return_sequences=True,
+                        implementation=2,
+                        name='rnn_layer')(input_data)
+        bn_rnn_last = BatchNormalization(name='bn_rnn_last_'+ str(i))(rnn_layer)
+        #time_dense = TimeDistributed(Dense(output_dim))(bn_rnn_last)
+        #last_layer = BatchNormalization(name='bn_rnn_'+str(i))(simp_rnn)
+                        
+
     # TODO: Add a TimeDistributed(Dense(output_dim)) layer
-    time_dense = TimeDistributed(Dense(output_dim))(bn_rnn_2)
+    time_dense = TimeDistributed(Dense(output_dim))(bn_rnn_last)
     # Add softmax activation layer
     y_pred = Activation('softmax', name='softmax')(time_dense)
     # Specify the model
@@ -137,18 +136,31 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     print(model.summary())
     return model
 
-def final_model():
+def final_model(input_dim, units, output_dim=29):
     """ Build a deep network for speech 
     """
     # Main acoustic input
     input_data = Input(name='the_input', shape=(None, input_dim))
     # TODO: Specify the layers in your network
-    ...
+    
+    ## add cnn layer
+    
+        
+    layer_2 = Bidirectional(GRU(units,
+                                activation = 'relu',
+                                return_sequences =True,
+                                name = 'layer1',
+                                dropout_W=0.30, #input gates
+                                dropout_U=0.10))#recurrent connections
+   
+    
+                            
+    time_dense = TimeDistributed(Dense(output_dim))(layer_2)
     # TODO: Add softmax activation layer
-    y_pred = ...
+    y_pred = Activation('softmax', name='softmax')(time_dense)
     # Specify the model
     model = Model(inputs=input_data, outputs=y_pred)
     # TODO: Specify model.output_length
-    model.output_length = ...
+    model.output_length = lambda x: x
     print(model.summary())
     return model
