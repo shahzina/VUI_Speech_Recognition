@@ -137,7 +137,7 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     print(model.summary())
     return model
 
-def final_model(input_dim, units, output_dim=29):
+def final_model(input_dim, units, recur_layers, output_dim=29):
     """ Build a deep network for speech 
     """
     # Main acoustic input
@@ -146,17 +146,19 @@ def final_model(input_dim, units, output_dim=29):
     
     ## add cnn layer
     
-        
-    layer_2 = Bidirectional(GRU(units,
+    last_layer = input_data    
+    for i in range(recur_layers):
+        rnn_layer = Bidirectional(GRU(units,
                                 activation = 'relu',
                                 return_sequences =True,
-                                name = 'layer1',
+                                name = 'rnn_layer_'+ str(i),
                                 dropout_W=0.30, #input gates
-                                dropout_U=0.10))#recurrent connections
+                                dropout_U=0.10))(last_layer) #recurrent connections
+        last_layer = BatchNormalization(name = 'last_layer_'+ str(i))(rnn_layer)
    
     
                             
-    time_dense = TimeDistributed(Dense(output_dim))(layer_2)
+    time_dense = TimeDistributed(Dense(output_dim))(last_layer)
     # TODO: Add softmax activation layer
     y_pred = Activation('softmax', name='softmax')(time_dense)
     # Specify the model
