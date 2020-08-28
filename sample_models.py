@@ -152,8 +152,8 @@ def final_model(input_dim, units, recur_layers, output_dim=29):
                                 activation = 'relu',
                                 return_sequences =True,
                                 name = 'rnn_layer_'+ str(i),
-                                dropout_W=0.30, #input gates
-                                dropout_U=0.10))(last_layer) #recurrent connections
+                                dropout_W=0.50 #input gates
+                                ))(last_layer) #recurrent connections dropout_U=0.50
         last_layer = BatchNormalization(name = 'last_layer_'+ str(i))(rnn_layer)
    
     
