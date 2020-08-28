@@ -137,7 +137,7 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     print(model.summary())
     return model
 
-def final_model(input_dim, units, recur_layers, output_dim=29):
+def final_model(input_dim, units,filters, kernel_size, conv_stride, conv_border_mode, recur_layers, output_dim=29):
     """ Build a deep network for speech 
     """
     # Main acoustic input
@@ -145,8 +145,14 @@ def final_model(input_dim, units, recur_layers, output_dim=29):
     # TODO: Specify the layers in your network
     
     ## add cnn layer
+    conv_1d = Conv1D(filters, kernel_size, 
+                     strides=conv_stride, 
+                     padding=conv_border_mode,
+                     activation='relu',
+                     name='conv1d')(input_data)
     
-    last_layer = input_data    
+    
+    last_layer = conv_1d    
     for i in range(recur_layers):
         rnn_layer = Bidirectional(GRU(units,
                                 activation = 'relu',
@@ -164,6 +170,45 @@ def final_model(input_dim, units, recur_layers, output_dim=29):
     # Specify the model
     model = Model(inputs=input_data, outputs=y_pred)
     # TODO: Specify model.output_length
-    model.output_length = lambda x: x
+    model.output_length = lambda x: cnn_output_length(
+        x, kernel_size, conv_border_mode, conv_stride)
     print(model.summary())
     return model
+
+
+
+
+
+
+
+################### MODEL WITH RNN LOOP ONLY (FIRST FINAL MODEL)
+# def final_model(input_dim, units, recur_layers, output_dim=29):
+#     """ Build a deep network for speech 
+#     """
+#     # Main acoustic input
+#     input_data = Input(name='the_input', shape=(None, input_dim))
+#     # TODO: Specify the layers in your network
+    
+#     ## add cnn layer
+    
+#     last_layer = input_data    
+#     for i in range(recur_layers):
+#         rnn_layer = Bidirectional(GRU(units,
+#                                 activation = 'relu',
+#                                 return_sequences =True,
+#                                 name = 'rnn_layer_'+ str(i),
+#                                 dropout_W=0.50 #input gates
+#                                 ))(last_layer) #recurrent connections dropout_U=0.50
+#         last_layer = BatchNormalization(name = 'last_layer_'+ str(i))(rnn_layer)
+   
+    
+                            
+#     time_dense = TimeDistributed(Dense(output_dim))(last_layer)
+#     # TODO: Add softmax activation layer
+#     y_pred = Activation('softmax', name='softmax')(time_dense)
+#     # Specify the model
+#     model = Model(inputs=input_data, outputs=y_pred)
+#     # TODO: Specify model.output_length
+#     model.output_length = lambda x: x
+#     print(model.summary())
+#     return model
